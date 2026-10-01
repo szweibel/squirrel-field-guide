@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#174b35" />
+    <meta
+      name="description"
+      content="Explore every recorded sighting in the 2018 Central Park Squirrel Census."
+    />
+    <title>Squirrel Field Guide — Central Park, 2018</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#explorer">Skip to the explorer</a>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Squirrel Field Guide home">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path
+            d="M29.8 15.2c4.1-5.8 12.6-3.3 12.2 3.3-.2 4.5-5.2 6.8-9.1 4.6 1.9 2.8 2.1 6.6.3 9.6-2.2 3.7-6.7 5.7-11.1 4.8-2.6-.5-4.5-2.2-5.1-4.4-3.8.2-7.5-1.1-9.3-3.7-2.3-3.4-.9-8.1 3-10.1 3.4-1.7 7.7-.8 10 2.2 1.5-3.2 4.8-5.6 9.1-6.3Z"
+          />
+          <circle cx="26.5" cy="20.3" r="1.2" />
+        </svg>
+        <span>Squirrel<br />Field Guide</span>
+      </a>
+      <a class="header-link" href="#about"
+        >About the census <span aria-hidden="true">↓</span></a
+      >
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="kicker">Central Park · autumn 2018</p>
+          <h1 id="page-title">The park,<br /><em>at squirrel height.</em></h1>
+          <p class="hero-intro">
+            Follow the field notes from
+            <strong id="hero-count">…</strong> recorded squirrel sightings—who
+            was foraging, who ran away, and who came closer.
+          </p>
+        </div>
+        <div class="field-stamp" aria-label="Census field note">
+          <span class="stamp-small">FIELD NOTE</span>
+          <strong>CP</strong>
+          <span class="stamp-rule"></span>
+          <span>OCT. 2018</span>
+          <span id="stamp-days">Census days</span>
+        </div>
+        <div class="hero-trail" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <section
+        class="explorer-shell"
+        id="explorer"
+        aria-labelledby="explorer-title"
+      >
+        <div class="explorer-heading">
+          <div>
+            <p class="section-label">The sightings</p>
+            <h2 id="explorer-title">Find a squirrel</h2>
+          </div>
+          <p>
+            Choose one trait from each field. Every active filter must match.
+          </p>
+        </div>
+
+        <form
+          class="filters"
+          id="filters"
+          aria-label="Filter squirrel sightings"
+        >
+          <label>
+            <span>Fur color</span>
+            <select id="color-filter" name="color">
+              <option value="all">Any color</option>
+              <option value="Gray">Gray</option>
+              <option value="Cinnamon">Cinnamon</option>
+              <option value="Black">Black</option>
+              <option value="missing">Not recorded</option>
+            </select>
+          </label>
+          <label>
+            <span>Activity</span>
+            <select id="activity-filter" name="activity">
+              <option value="all">Any activity</option>
+              <option value="running">Running</option>
+              <option value="chasing">Chasing</option>
+              <option value="climbing">Climbing</option>
+              <option value="eating">Eating</option>
+              <option value="foraging">Foraging</option>
+            </select>
+          </label>
+          <label>
+            <span>Reaction to people</span>
+            <select id="reaction-filter" name="reaction">
+              <option value="all">Any reaction</option>
+              <option value="approaches">Approached</option>
+              <option value="indifferent">Stayed indifferent</option>
+              <option value="runs_from">Ran away</option>
+            </select>
+          </label>
+          <div class="filter-actions">
+            <button
+              class="button button-secondary"
+              type="button"
+              id="reset-filters"
+            >
+              Reset
+            </button>
+            <button
+              class="button button-primary"
+              type="button"
+              id="random-sighting"
+            >
+              Surprise me <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </form>
+
+        <div
+          class="status-panel"
+          id="load-status"
+          role="status"
+          aria-live="polite"
+        >
+          <div class="loader" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div>
+            <strong id="status-title">Gathering the field notes…</strong>
+            <span id="status-message"
+              >Loading every sighting from NYC Open Data.</span
+            >
+          </div>
+          <button
+            class="button button-primary"
+            type="button"
+            id="retry-load"
+            hidden
+          >
+            Try again
+          </button>
+        </div>
+
+        <div class="results-bar" id="results-bar" hidden>
+          <p id="result-count" aria-live="polite"></p>
+          <div class="legend" aria-label="Marker color legend">
+            <span><i class="dot gray"></i>Gray</span>
+            <span><i class="dot cinnamon"></i>Cinnamon</span>
+            <span><i class="dot black"></i>Black</span>
+            <span><i class="dot missing"></i>Not recorded</span>
+          </div>
+        </div>
+
+        <div class="map-stage" id="map-stage" hidden>
+          <div class="map-wrap">
+            <div
+              id="map"
+              aria-label="Map of squirrel sightings in Central Park"
+            ></div>
+            <p class="map-note">Select a dot to open its field note.</p>
+          </div>
+
+          <aside
+            class="sighting-card"
+            id="sighting-card"
+            aria-labelledby="detail-heading"
+            tabindex="-1"
+          >
+            <div class="empty-detail" id="empty-detail">
+              <span class="acorn" aria-hidden="true"></span>
+              <p class="section-label">Field note</p>
+              <h3 id="detail-heading">Pick a dot on the map</h3>
+              <p>
+                Or choose an observation from the list below to read its census
+                notes.
+              </p>
+            </div>
+            <div id="detail-content" hidden>
+              <div class="detail-topline">
+                <span class="fur-swatch" id="detail-swatch"></span>
+                <span id="detail-fur"></span>
+              </div>
+              <p class="observation-id" id="detail-id"></p>
+              <h3 id="detail-title"></h3>
+              <dl class="detail-facts">
+                <div>
+                  <dt>Observed</dt>
+                  <dd id="detail-date"></dd>
+                </div>
+                <div>
+                  <dt>Age</dt>
+                  <dd id="detail-age"></dd>
+                </div>
+                <div>
+                  <dt>Location</dt>
+                  <dd id="detail-location"></dd>
+                </div>
+              </dl>
+              <div class="detail-section">
+                <h4>What it was doing</h4>
+                <div class="tags" id="detail-activities"></div>
+                <p id="detail-other-activity"></p>
+              </div>
+              <div class="detail-section">
+                <h4>With people</h4>
+                <div class="tags" id="detail-reactions"></div>
+                <p id="detail-other-interaction"></p>
+              </div>
+              <p class="detail-specific" id="detail-specific"></p>
+            </div>
+          </aside>
+        </div>
+
+        <section
+          class="observation-section"
+          id="observation-section"
+          hidden
+          aria-labelledby="list-title"
+        >
+          <div class="list-heading">
+            <div>
+              <p class="section-label">Field log</p>
+              <h3 id="list-title">Matching observations</h3>
+            </div>
+            <p id="list-note"></p>
+          </div>
+          <ol class="observation-list" id="observation-list"></ol>
+          <button class="show-more" type="button" id="show-more" hidden>
+            Show more observations
+          </button>
+        </section>
+      </section>
+
+      <section class="about" id="about" aria-labelledby="about-title">
+        <div class="about-title">
+          <p class="section-label">Read the tracks carefully</p>
+          <h2 id="about-title">One remarkable<br />October snapshot.</h2>
+        </div>
+        <div class="about-copy">
+          <p>
+            These are sighting records, not a list of unique animals. The same
+            squirrel may have been seen more than once, and a missing trait
+            means it was not recorded.
+          </p>
+          <dl>
+            <div>
+              <dt>Dates covered</dt>
+              <dd id="coverage-dates">October 2018</dd>
+            </div>
+            <div>
+              <dt>Records loaded</dt>
+              <dd id="source-count">Loading…</dd>
+            </div>
+            <div>
+              <dt>Retrieved</dt>
+              <dd id="retrieved-at">Loading…</dd>
+            </div>
+          </dl>
+          <p class="source-note" id="method-note">
+            Historical 2018 snapshot from the 2018 Central Park Squirrel Census.
+            The explorer reads the public dataset directly from NYC Open Data.
+          </p>
+          <a
+            class="source-link"
+            href="https://data.cityofnewyork.us/Environment/2018-Central-Park-Squirrel-Census-Squirrel-Data/vfnx-vebw/about_data"
+            target="_blank"
+            rel="noreferrer"
+            >Visit the source dataset <span aria-hidden="true">↗</span></a
+          >
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Squirrel Field Guide</span>
+      <span>An independent view of public census data.</span>
+      <a href="#top">Back to the treetops ↑</a>
+    </footer>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+      defer
+    ></script>
+    <script src="app.js" defer></script>
+  </body>
+</html>
